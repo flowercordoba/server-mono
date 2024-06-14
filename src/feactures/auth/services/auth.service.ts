@@ -16,6 +16,7 @@ export class AuthService {
 
     try {
       const user = new AuthModel(registerUserDto);
+      console.log('user sservices',user);
 
       // Encriptar la contraseña
       user.password = await bcryptAdapter.hash(registerUserDto.password);
@@ -44,6 +45,8 @@ export class AuthService {
       });
 
       await userModel.save();
+      console.log('user userModel',userModel);
+
 
       const { password, ...userEntity } = UserEntity.fromObject(user);
 
@@ -55,6 +58,7 @@ export class AuthService {
         token: token,
       };
     } catch (error) {
+      console.log('error services',error);
       throw CustomError.internalServer(`${error}`);
     }
   }

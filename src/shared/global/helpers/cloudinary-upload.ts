@@ -49,3 +49,5 @@ export function videoUpload(
     );
   });
 }
+
+export { UploadApiResponse };

@@ -11,7 +11,6 @@ const authSchema = new mongoose.Schema({
     required: [true, 'Email is required'],
     unique: true
   },
-
   emailValidated: {
     type: Boolean,
     default: false
@@ -29,7 +28,6 @@ const authSchema = new mongoose.Schema({
   country: { type: String },
   emailVerificationToken: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
-
   role: {
     type: [String],
     default: ['USER_ROLE'],

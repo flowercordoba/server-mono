@@ -15,13 +15,11 @@ import 'express-async-errors';
 import { config } from '@root/config';
 import applicationRoutes from '@root/routes';
 import { CustomError, IErrorResponse } from '@globals/helpers/error-handler';
-// import { SocketIOPostHandler } from '@socket/post';
-// import { SocketIOFollowerHandler } from '@socket/follower';
-// import { SocketIOImageHandler } from '@socket/image';
-// import { SocketIOChatHandler } from '@socket/chat';
-// import { FriendRequestSocket } from '@socket/sendfriend';
-// import { SocketIONotificationHandler } from '@socket/notification';
-// import { SocketIOUserHandler } from '@user/socket/user';
+import { SocketIOPostHandler } from '@socket/socketIOPostHandler';
+import { SocketIONotificationHandler } from '@socket/notification-handler';
+import { SocketIOFriendHandler } from '@socket/SocketIOFriendHandler';
+import { modelService } from '@service/model.service';
+
 
 const SERVER_PORT = config.PORT;
 const log: Logger = config.createLogger('server');
@@ -39,6 +37,10 @@ export class ChatServer {
     this.routesMiddleware(this.app);
     this.apiMonitoring(this.app);
     this.globalErrorHandler(this.app);
+
+
+    // Inicializar el servicio de modelos
+    modelService.initializeModels();
     this.startServer(this.app);
   }
 
@@ -49,7 +51,7 @@ export class ChatServer {
         name: 'session',
         keys: [config.SECRET_KEY_ONE!, config.SECRET_KEY_TWO!],
         maxAge: 24 * 7 * 3600000,
-        secure: config.NODE_ENV !== 'development', //asi no sale el erorr currente
+        secure: config.NODE_ENV !== 'development' //asi no sale el erorr currente
         // sameSite: 'none' // comentar si lo hago en local
       })
     );
@@ -123,28 +125,22 @@ export class ChatServer {
   }
 
   private startHttpServer(httpServer: http.Server): void {
-    // log.info(`Worker with process id of ${process.pid} has started...`);
-    // log.info(`Server has started with process ${process.pid}`);
     httpServer.listen(SERVER_PORT, () => {
       log.info(`${config.NODE_ENV}:${SERVER_PORT}`);
     });
   }
 
   private socketIOConnections(io: Server): void {
-    // const postSocketHandler: SocketIOPostHandler = new SocketIOPostHandler(io);
-    // const followerSocketHandler: SocketIOFollowerHandler = new SocketIOFollowerHandler(io);
-    // const sendfriendSocketHandler: FriendRequestSocket = new FriendRequestSocket(io);
-    // const userSocketHandler: SocketIOUserHandler = new SocketIOUserHandler(io);
-    // const chatSocketHandler: SocketIOChatHandler = new SocketIOChatHandler(io);
-    // const notificationSocketHandler: SocketIONotificationHandler = new SocketIONotificationHandler();
-    // const imageSocketHandler: SocketIOImageHandler = new SocketIOImageHandler();
 
-    // postSocketHandler.listen();
-    // followerSocketHandler.listen();
-    // sendfriendSocketHandler.listen();
-    // userSocketHandler.listen();
-    // chatSocketHandler.listen();
-    // notificationSocketHandler.listen(io);
-    // imageSocketHandler.listen(io);
+    const notificationSocketHandler = new SocketIONotificationHandler(io);
+    notificationSocketHandler.listen();
+
+    const postSocketHandler: SocketIOPostHandler = new SocketIOPostHandler(io);
+    postSocketHandler.listen();
+
+    
+    const friendSocketHandler: SocketIOFriendHandler = new SocketIOFriendHandler(io);
+    friendSocketHandler.listen();
   }
+
 }
