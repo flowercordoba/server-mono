@@ -7,6 +7,8 @@ const imageSchema: Schema = new Schema({
   bgImageId: { type: String, default: '' },
   imgVersion: { type: String, default: '' },
   imgId: { type: String, default: '' },
+  url: { type: String, required: true },  // Añadir el campo URL
+
   createdAt: { type: Date, default: Date.now, index: true }
 });
 

@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
 import HTTP_STATUS from 'http-status-codes';
-import { IFileImageDocument } from '../interfaces/image.interface';
-import { imageService } from '../services/image.service';
 import { UploadApiResponse } from 'cloudinary';
 import { BadRequestError } from '../../../shared/global/helpers/error-handler';
 import { uploads } from '@globals/helpers/cloudinary-upload';
@@ -9,53 +7,17 @@ import { IBgUploadResponse } from '../interfaces/image.interface';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { Helpers } from '@globals/helpers/helpers';
-import { DeleteImageDto, GetImageDto, UploadImageDto } from '../dto/images.dto';
+import {  UploadImageDto } from '../dto/images.dto';
+import { imageService } from '../services/image.service';
 
-// Definimos una interfaz CustomRequest que extiende Request y añade la propiedad userId
 interface CustomRequest extends Request {
   userId?: string;
 }
 
 export class ImageController {
-  public async deleteImage(req: Request, res: Response): Promise<void> {
-    const deleteImageDto = plainToClass(DeleteImageDto, req.params);
-    const errors = await validate(deleteImageDto);
-
-    if (errors.length > 0) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json(errors);
-      return;
-    }
-
-    await imageService.removeImageFromDB(deleteImageDto.imageId);
-
-    res.status(HTTP_STATUS.OK).json({ message: 'Image deleted successfully' });
-  }
-
-  public async getBackgroundImage(req: Request, res: Response): Promise<void> {
-    const getImageDto = plainToClass(GetImageDto, req.params);
-    const errors = await validate(getImageDto);
-
-    if (errors.length > 0) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json(errors);
-      return;
-    }
-
-    const image: IFileImageDocument = await imageService.getImageByBackgroundId(getImageDto.userId);
-    
-    res.status(HTTP_STATUS.OK).json({ message: 'Background image retrieved successfully', image });
-  }
-
-  public async getImages(req: Request, res: Response): Promise<void> {
-    const getImageDto = plainToClass(GetImageDto, req.params);
-    const errors = await validate(getImageDto);
-
-    if (errors.length > 0) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json(errors);
-      return;
-    }
-
-    const images: IFileImageDocument[] = await imageService.getImages(getImageDto.userId);
-    res.status(HTTP_STATUS.OK).json({ message: 'User images', images });
+  constructor() {
+    this.backgroundImage = this.backgroundImage.bind(this);
+    this.backgroundUpload = this.backgroundUpload.bind(this);
   }
 
   public async addProfileImage(req: CustomRequest, res: Response): Promise<void> {
@@ -78,23 +40,21 @@ export class ImageController {
     res.status(HTTP_STATUS.OK).json({ message: 'Profile image added successfully', url });
   }
 
-  public async addBackgroundImage(req: CustomRequest, res: Response): Promise<void> {
-    const uploadImageDto = plainToClass(UploadImageDto, req.body);
-    const errors = await validate(uploadImageDto);
-
-    if (errors.length > 0) {
-      res.status(HTTP_STATUS.BAD_REQUEST).json(errors);
-      return;
-    }
+  public async backgroundImage(req: CustomRequest, res: Response): Promise<void> {
+    console.log('Received image data:', req.body.image.substring(0, 30));
 
     try {
-      const { version, publicId }: IBgUploadResponse = await this.backgroundUpload(uploadImageDto.image);
+      const { version, publicId }: IBgUploadResponse = await this.backgroundUpload(req.body.image);
 
-      await imageService.addBackgroundImageToDB(req.userId!, publicId, version);
+      console.log('Version:', version, 'PublicId:', publicId);
+      
+      const url = `https://res.cloudinary.com/dzqpacupf/image/upload/v${version}/${publicId}`;
 
-      res.status(HTTP_STATUS.OK).json({ message: 'Background image added successfully' });
+      await imageService.addBackgroundImageToDB(req.userId!, url, publicId, version);
+
+      res.status(HTTP_STATUS.OK).json({ message: 'Image added successfully', version, publicId });
     } catch (error) {
-      console.error('Error in addBackgroundImage:', error);
+      console.error('Error in backgroundImage:', error);
       res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ message: 'Error occurred' });
     }
   }

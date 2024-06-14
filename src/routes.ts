@@ -6,10 +6,14 @@ import postRoutes from './feactures/post/routes/post.routes';
 import friendRoutes from './feactures/friend/routes/friend.routes';
 import { userRoutes } from './feactures/user/routes/user.routes';
 import { imageRoutes } from './feactures/images/routes/imageRoutes';
+import { albumRoutes } from './feactures/album/routes/album.routes';
+import { videoRoutes } from './feactures/videos/routes/album.routes';
 
 const BASE_AUTH = '/api/v1/auth';
 const BASE_USER = '/api/v1/user';
 const BASE_IMAGES = '/api/v1/images';
+const BASE_ALBUM = '/api/v1/album';
+const BASE_VIDEOS = '/api/v1/videos';
 
 const BASE_NOTIFICATION = '/api/v1/notification';
 const BASE_POST = '/api/v1/post'; 
@@ -23,8 +27,10 @@ export default (app: Application) => {
 
     app.use(BASE_USER, userRoutes.routes());
     app.use(BASE_IMAGES, imageRoutes.routes());
-
-    
+    app.use(BASE_ALBUM, albumRoutes.routes());
+    app.use(BASE_VIDEOS, videoRoutes.routes());
+// 
+    // 
     app.use(BASE_NOTIFICATION, notificationRoutes);
     app.use(BASE_POST, postRoutes);
     app.use(BASE_FRIEND, friendRoutes);
